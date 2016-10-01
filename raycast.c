@@ -44,6 +44,17 @@ int write_p3(Pixel* image){
     return 1;
 }
 
+static inline double sqr(double v) {
+  return v*v;
+}
+
+static inline void normalize(double* v) {
+  double len = sqrt(sqr(v[0]) + sqr(v[1]) + sqr(v[2]));
+  v[0] /= len;
+  v[1] /= len;
+  v[2] /= len;
+}
+
 // next_c() wraps the getc() function and provides error checking and line
 // number maintenance
 int next_c(FILE* json){
