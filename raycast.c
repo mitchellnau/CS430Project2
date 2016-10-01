@@ -10,6 +10,21 @@ typedef struct Pixel{
     unsigned char r, g, b;
 } Pixel;
 
+typedef struct {
+  int kind; // 0 = sphere, 1 = plane
+  double color[3];
+  union {
+    struct {
+      double center[3];
+      double radius;
+    } sphere;
+    struct {
+      double center[3];
+      double normal[3];
+    } plane;
+  };
+} Object;
+
 FILE* inputfp;
 FILE* outputfp;
 int width, height, maxcv; //global variables to store header information
