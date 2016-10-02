@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 //data type to store pixel rgb values
 typedef struct Pixel{
@@ -128,7 +129,9 @@ char* next_string(FILE* json){
         c = next_c(json);
     }
     buffer[i] = 0;
-    return strdup(buffer);
+    char* returnString = malloc(sizeof(buffer));
+    strcpy(returnString, buffer);
+    return returnString;
 }
 
 double next_number(FILE* json){
@@ -157,7 +160,7 @@ double* next_vector(FILE* json){
 }
 
 
-void read_scene(char* filename){
+int read_scene(char* filename, Object* objects){
     int c;
     FILE* json = fopen(filename, "r");
 
@@ -167,14 +170,11 @@ void read_scene(char* filename){
     }
 
     skip_ws(json);
-
     // Find the beginning of the list
     expect_c(json, '[');
-
     skip_ws(json);
-
     // Find the objects
-
+    int i = 0;
     while (1){
         c = fgetc(json);
         if (c == ']'){
@@ -184,6 +184,7 @@ void read_scene(char* filename){
         }
         if (c == '{'){
             skip_ws(json);
+            Object temp;
 
             // Parse the object
             char* key = next_string(json);
@@ -193,18 +194,18 @@ void read_scene(char* filename){
             }
 
             skip_ws(json);
-
             expect_c(json, ':');
-
             skip_ws(json);
-
             char* value = next_string(json);
 
             if (strcmp(value, "camera") == 0){
+                    temp.kind = 0;
             }
             else if (strcmp(value, "sphere") == 0){
+                    temp.kind = 1;
             }
             else if (strcmp(value, "plane") == 0){
+                    temp.kind = 2;
             }
             else{
                 fprintf(stderr, "Error: Unknown type, \"%s\", on line number %d.\n", value, line);
@@ -218,6 +219,7 @@ void read_scene(char* filename){
                 c = next_c(json);
                 if (c == '}'){
                     // stop parsing this object
+                    i++;
                     break;
                 }
                 else if (c == ','){
@@ -231,6 +233,16 @@ void read_scene(char* filename){
                             (strcmp(key, "height") == 0) ||
                             (strcmp(key, "radius") == 0)){
                         double value = next_number(json);
+                        if(temp.kind == 0 && (strcmp(key, "width") == 0)){
+                                temp.camera.width = value;
+                        }else if(temp.kind == 0 && (strcmp(key, "height") == 0)){
+                                temp.camera.height = value;
+                        }else if(temp.kind == 1 && (strcmp(key, "radius") == 0)){
+                                temp.sphere.radius = value;
+                        }else{
+                            fprintf(stderr, "Error: Non-camera/sphere object has attribute width or height or radius line number %d.\n", line);
+                            exit(1);
+                        }
                     }
                     else if ((strcmp(key, "color") == 0) ||
                              (strcmp(key, "position") == 0) ||
@@ -257,12 +269,14 @@ void read_scene(char* filename){
             }
             else if (c == ']'){
                 fclose(json);
-                return;
+                //*(objects+i*sizeof(Object)) = NULL;
+                return i;
             }
             else{
                 fprintf(stderr, "Error: Expecting ',' or ']' on line %d.\n", line);
                 exit(1);
             }
+            *(objects+i*sizeof(Object)) = temp;
         }
     }
 }
@@ -335,7 +349,6 @@ double sphere_intersection(double* Ro, double* Rd,
   return -1;
 }
 
-
 int main(int argc, char* argv[]){
     if(argc != 5){
         fprintf(stderr, "Error: Insufficient parameter amount.\nProper input: width height input_filename.json output_filename.ppm\n\n", 001);
@@ -354,9 +367,66 @@ int main(int argc, char* argv[]){
         exit(1); //if the file cannot be opened, exit the program
     }
 
+    Object** objects;
+    objects = malloc(sizeof(Object*)*128);
+
     width = argv[1][0];
     height = argv[2][0];
-    read_scene(argv[3]);
+    int numOfObjects = read_scene(argv[3], &objects[0][0]);
+    printf("%d", numOfObjects);
+    objects[numOfObjects] = NULL;
+
+    double cx = 0;
+    double cy = 0;
+    double h = 0.25;
+    double w = 0.25;
+
+    int M = 20;
+    int N = 20;
+
+    double pixheight = h / M;
+    double pixwidth = w / N;
+
+
+    int y, x, i;
+    for (y = 0; y < M; y += 1){
+        for (x = 0; x < N; x += 1){
+            double Ro[3] = {0, 0, 0};
+            // Rd = normalize(P - Ro)
+            double Rd[3] ={
+                cx - (w/2) + pixwidth * (x + 0.5),
+                cy - (h/2) + pixheight * (y + 0.5),
+                1};
+            normalize(Rd);
+
+            double best_t = INFINITY;
+            for (i=0; objects[i] != 0; i += 1){
+                double t = 0;
+
+                switch(objects[i]->kind){
+                case 1:
+                    t = sphere_intersection(Ro, Rd,
+                                            objects[i]->sphere.center,
+                                            objects[i]->sphere.radius);
+                    break;
+                default:
+                    // Horrible error
+                    exit(1);
+                }
+                if (t > 0 && t < best_t) best_t = t;
+            }
+            if (best_t > 0 && best_t != INFINITY){
+                printf("#");
+            }
+            else{
+                printf(".");
+            }
+
+        }
+        printf("\n");
+    }
+
+
     Pixel* data = malloc(sizeof(Pixel)*width*height*3); //allocate memory to hold all of the pixel data
     //write_p3(&data[0]);
     fclose(outputfp); //close the output file
