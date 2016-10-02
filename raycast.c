@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <ctype.h>
 
 //data type to store pixel rgb values
 typedef struct Pixel{
@@ -180,7 +181,7 @@ int read_scene(char* filename, Object* objects){
         if (c == ']'){
             fprintf(stderr, "Error: This is the worst scene file EVER.\n");
             fclose(json);
-            return;
+            return -1;
         }
         if (c == '{'){
             skip_ws(json);
@@ -247,6 +248,33 @@ int read_scene(char* filename, Object* objects){
                              (strcmp(key, "position") == 0) ||
                              (strcmp(key, "normal") == 0)){
                         double* value = next_vector(json);
+                        //memcpy(dest, src, sizeof (mytype) * rows * coloumns);
+                        if(temp.kind == 1 && (strcmp(key, "color") == 0)){
+                                memcpy(temp.color, value, sizeof (value));
+                        }else if(temp.kind == 1 && (strcmp(key, "position") == 0)){
+                                //printf("pos: %f %f %f\n", value[0], value[1], value[2]);
+                                memcpy(temp.sphere.center, value, sizeof (value));
+                        }else if(temp.kind == 2 && (strcmp(key, "color") == 0)){
+                                memcpy(temp.color, value, sizeof (value));
+                        }else if(temp.kind == 2 && (strcmp(key, "position") == 0)){
+                                memcpy(temp.plane.center, value, sizeof (value));
+                        }else if(temp.kind == 2 && (strcmp(key, "normal") == 0)){
+                                memcpy(temp.plane.normal, value, sizeof (value));
+                        }else if (temp.kind == 0 && (strcmp(key, "position") == 0)){
+                            //camera position assumed to be zero
+                        }else{
+                            if(temp.kind == 0){
+                                    fprintf(stderr, "Error: Camera object has non-position attribute on line %d.\n", line);
+                                    exit(1);
+                            }else if(temp.kind == 1){
+                                    fprintf(stderr, "Error: Sphere object has non-color/position attribute on line %d.\n", line);
+                                    exit(1);
+                            }else{
+                                    fprintf(stderr, "Error: Plane object has non-position/color/normal attribute on line %d.\n", line);
+                                    exit(1);
+                            }
+                        }
+
                     }
                     else{
                         fprintf(stderr, "Error: Unknown property, \"%s\", on line %d.\n",
@@ -266,8 +294,8 @@ int read_scene(char* filename, Object* objects){
             printf("Offset: %d \n", i*sizeof(Object));
 
             *(objects+i*sizeof(Object)) = temp;
-            printf("Line: %d \n", line);
-            printf("Kind: %d %d\n", temp.kind, objects[i*sizeof(Object)].kind);
+            //printf("Line: %d \n", line);
+
             i++;
 
 
@@ -381,17 +409,19 @@ int main(int argc, char* argv[]){
     printf("Object #: %d\n", numOfObjects);
     //objects[numOfObjects] = NULL;
 
+
+    //printf("Object #: %f\n", objects[1*sizeof(Object)].sphere.center[2]);
+
     double cx = 0;
     double cy = 0;
-    double h = 0.25;
-    double w = 0.25;
+    double h = 0.7;
+    double w = 0.7;
 
     int M = 20;
     int N = 20;
 
     double pixheight = h / M;
     double pixwidth = w / N;
-
 
     int y, x, i;
     for (y = 0; y < M; y += 1){
@@ -405,7 +435,7 @@ int main(int argc, char* argv[]){
             normalize(Rd);
 
             double best_t = INFINITY;
-            for (i=0; numOfObjects > i; i += 1){
+            for (i=0; i < numOfObjects; i += 1){
                 double t = 0;
 
                 switch(objects[i*sizeof(Object)].kind){
