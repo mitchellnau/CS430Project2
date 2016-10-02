@@ -137,7 +137,7 @@ char* next_string(FILE* json){
 
 double next_number(FILE* json){
     double value;
-    fscanf(json, "%f", &value);
+    fscanf(json, "%lf", &value);
     // Error check this..
     return value;
 }
