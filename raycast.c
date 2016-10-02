@@ -10,19 +10,24 @@ typedef struct Pixel{
     unsigned char r, g, b;
 } Pixel;
 
-typedef struct {
-  int kind; // 0 = sphere, 1 = plane
-  double color[3];
-  union {
-    struct {
-      double center[3];
-      double radius;
-    } sphere;
-    struct {
-      double center[3];
-      double normal[3];
-    } plane;
-  };
+typedef struct{
+    int kind; // 0 = camera, 1 = sphere, 2 = plane
+    double color[3];
+    union{
+        struct{
+            double center[3];
+            double width;
+            double height;
+        } camera;
+        struct{
+            double center[3];
+            double radius;
+        } sphere;
+        struct{
+            double center[3];
+            double normal[3];
+        } plane;
+    };
 } Object;
 
 FILE* inputfp;
