@@ -263,6 +263,11 @@ int read_scene(char* filename, Object* objects){
             }
             skip_ws(json);
             c = next_c(json);
+
+            *(objects+i*sizeof(Object)) = temp;
+            printf("Kind: %d %d\n", temp.kind, objects[i*sizeof(Object)].kind);
+
+
             if (c == ','){
                 // noop
                 skip_ws(json);
@@ -276,7 +281,6 @@ int read_scene(char* filename, Object* objects){
                 fprintf(stderr, "Error: Expecting ',' or ']' on line %d.\n", line);
                 exit(1);
             }
-            *(objects+i*sizeof(Object)) = temp;
         }
     }
 }
@@ -373,8 +377,10 @@ int main(int argc, char* argv[]){
     width = argv[1][0];
     height = argv[2][0];
     int numOfObjects = read_scene(argv[3], &objects[0][0]);
-    printf("%d", numOfObjects);
+    printf("Object #: %d\n", numOfObjects);
     objects[numOfObjects] = NULL;
+
+    printf("Kind: %d\n", objects[0]->kind);
 
     double cx = 0;
     double cy = 0;
@@ -404,12 +410,17 @@ int main(int argc, char* argv[]){
                 double t = 0;
 
                 switch(objects[i]->kind){
-                case 1:
-                    t = sphere_intersection(Ro, Rd,
-                                            objects[i]->sphere.center,
-                                            objects[i]->sphere.radius);
-                    break;
-                default:
+                    case 0:
+                        printf("Camera\n");
+                        break;
+                    case 1:
+                        t = sphere_intersection(Ro, Rd,
+                                                objects[i]->sphere.center,
+                                                objects[i]->sphere.radius);
+                    case 2:
+                        printf("Plane\n");
+                        break;
+                    default:
                     // Horrible error
                     exit(1);
                 }
