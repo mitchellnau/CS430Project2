@@ -243,8 +243,7 @@ int read_scene(char* filename, Object* objects){
                             fprintf(stderr, "Error: Non-camera/sphere object has attribute width or height or radius line number %d.\n", line);
                             exit(1);
                         }
-                        if(temp.kind == 0){
-                                printf("here!\n");
+                        if(temp.kind == 0){ //camera assumed to be at 0,0,0
                                 temp.camera.center[0] = 0.0;
                                 temp.camera.center[1] = 0.0;
                                 temp.camera.center[2] = 0.0;
@@ -377,6 +376,7 @@ int main(int argc, char* argv[]){
     int numOfObjects = read_scene(argv[3], &objects[0]);
     printf("Object #: %d\n", numOfObjects);
     //objects[numOfObjects] = NULL;
+    Pixel* data = malloc(sizeof(Pixel)*pwidth*pheight*3); //allocate memory to hold all of the pixel data
 
 
     //printf("Object #: %f\n", objects[1*sizeof(Object)].sphere.center[2]);
@@ -393,7 +393,7 @@ int main(int argc, char* argv[]){
     double pixwidth = w / N;
 
     int y, x, i;
-
+/*
     printf("Object 0: %d\n\tWidth:%f\n\tHeight: %f\n\tPos: %lf %lf %lf\n", objects[0].kind, objects[0].camera.width,
                                                                            objects[0].camera.height, objects[0].camera.center[0],
                                                                            objects[0].camera.center[1],  objects[0].camera.center[2]);
@@ -406,7 +406,7 @@ int main(int argc, char* argv[]){
                                                                        objects[2*sizeof(Object)].color[2], objects[2*sizeof(Object)].plane.center[0],
                                                                        objects[2*sizeof(Object)].plane.center[1],  objects[2*sizeof(Object)].plane.center[2],
                                                                        objects[2*sizeof(Object)].plane.normal[0], objects[2*sizeof(Object)].plane.normal[1],
-                                                                       objects[2*sizeof(Object)].plane.normal[2]);
+                                                                       objects[2*sizeof(Object)].plane.normal[2]);*/
 
     for (y = 0; y < M; y += 1){
         for (x = 0; x < N; x += 1){
@@ -420,6 +420,7 @@ int main(int argc, char* argv[]){
             normalize(Rd);
 
             double best_t = INFINITY;
+            int best_t_i;
             for (i=0; i < numOfObjects; i += 1){
                 double t = 0;
 
@@ -437,22 +438,33 @@ int main(int argc, char* argv[]){
                     // Horrible error
                     exit(1);
                 }
-                if (t > 0 && t < best_t) best_t = t;
+                if (t > 0 && t < best_t){
+                        best_t = t;
+                        best_t_i = i;
+                }
             }
             if (best_t > 0 && best_t != INFINITY){
-                printf("#");
+                //printf("#");
+                Pixel temporary;
+                temporary.r = objects[best_t_i*sizeof(Object)].color[0]*255;
+                temporary.g = objects[best_t_i*sizeof(Object)].color[1]*255;
+                temporary.b = objects[best_t_i*sizeof(Object)].color[2]*255;
+                *(data+y*pheight*sizeof(Pixel)+x*sizeof(Pixel)) = temporary;
             }
             else{
-                printf(".");
+                //printf(".");
+                Pixel temporary;
+                temporary.r = 0;
+                temporary.g = 0;
+                temporary.b = 0;
+                *(data+y*pheight*sizeof(Pixel)+x*sizeof(Pixel)) = temporary;
             }
 
         }
-        printf("\n");
+        //printf("\n");
     }
-
-
-    Pixel* data = malloc(sizeof(Pixel)*pwidth*pheight*3); //allocate memory to hold all of the pixel data
-    //write_p3(&data[0]);
+    maxcv = 255;
+    write_p3(&data[0]);
     fclose(outputfp); //close the output file
     fclose(inputfp);  //close the input file
     printf("closing...");
