@@ -34,16 +34,16 @@ typedef struct{
 
 FILE* inputfp;
 FILE* outputfp;
-int width, height, maxcv; //global variables to store header information
+int pwidth, pheight, maxcv; //global variables to store header information
 int line = 1;
 
 //This function writes data from the pixel buffer passed into the function to the output file in ascii.
 int write_p3(Pixel* image){
     fprintf(outputfp, "%c%c\n", 'P', '3'); //write out the file header P type
-    fprintf(outputfp, "%d %d\n", width, height); //write the width and the height
+    fprintf(outputfp, "%d %d\n", pwidth, pheight); //write the width and the height
     fprintf(outputfp, "%d\n", maxcv); //write the max color value
     int i;
-    for(i = 0; i < width*height; i++){  //write each pixel in the image to the output file
+    for(i = 0; i < pwidth*pheight; i++){  //write each pixel in the image to the output file
         fprintf(outputfp, "%d\n%d\n%d\n", image[i*sizeof(Pixel)].r, //in ascii
                 image[i*sizeof(Pixel)].g,
                 image[i*sizeof(Pixel)].b);
@@ -317,7 +317,7 @@ int read_scene(char* filename, Object* objects){
 
 double sphere_intersection(double* Ro, double* Rd,
 			     double* C, double r) {
-  // Step 1. Find the equation for the object you are
+  /* Step 1. Find the equation for the object you are
   // interested in..  (e.g., sphere)
   //
   // x^2 + y^2 + z^2 = r^2
@@ -364,7 +364,7 @@ double sphere_intersection(double* Ro, double* Rd,
   // t * (2 * (Rox * Rdx - Rdx * Cx + Roy * Rdy - Rdy * Cy + Roz * Rdz - Rdz * Cz)) +
   // Rox^2 - 2*Rox*Cx + Cx^2 + Roy^2 - 2*Roy*Cy + Cy^2 + Roz^2 - 2*Roz*Cz + Cz^2 - r^2 = 0
   //
-  // Use the quadratic equation to solve for t..
+  // Use the quadratic equation to solve for t..*/
   double a = (sqr(Rd[0]) + sqr(Rd[1]) + sqr(Rd[2]));
   double b = (2 * (Ro[0] * Rd[0] - Rd[0] * C[0] + Ro[1] * Rd[1] - Rd[1] * C[1] + Ro[2] * Rd[2] - Rd[2] * C[2]));
   double c = sqr(Ro[0]) - 2*Ro[0]*C[0] + sqr(C[0]) + sqr(Ro[1]) - 2*Ro[1]*C[1] + sqr(C[1]) + sqr(Ro[2]) - 2*Ro[2]*C[2] + sqr(C[2]) - sqr(r);
@@ -403,8 +403,8 @@ int main(int argc, char* argv[]){
 
     Object* objects = malloc(sizeof(Object*)*128*80);
 
-    width = argv[1][0];
-    height = argv[2][0];
+    pwidth = atoi(argv[1]);
+    pheight = atoi(argv[2]);
     int numOfObjects = read_scene(argv[3], &objects[0]);
     printf("Object #: %d\n", numOfObjects);
     //objects[numOfObjects] = NULL;
@@ -414,16 +414,17 @@ int main(int argc, char* argv[]){
 
     double cx = 0;
     double cy = 0;
-    double h = 0.7;
-    double w = 0.7;
+    double h = 0.5;
+    double w = 0.5;
 
-    int M = 20;
-    int N = 20;
+    int M = pheight;
+    int N = pwidth;
 
     double pixheight = h / M;
     double pixwidth = w / N;
 
     int y, x, i;
+
     for (y = 0; y < M; y += 1){
         for (x = 0; x < N; x += 1){
             double Ro[3] = {0, 0, 0};
@@ -445,6 +446,7 @@ int main(int argc, char* argv[]){
                         t = sphere_intersection(Ro, Rd,
                                                 objects[i*sizeof(Object)].sphere.center,
                                                 objects[i*sizeof(Object)].sphere.radius);
+                        break;
                     case 2:
                         break;
                     default:
@@ -465,7 +467,7 @@ int main(int argc, char* argv[]){
     }
 
 
-    Pixel* data = malloc(sizeof(Pixel)*width*height*3); //allocate memory to hold all of the pixel data
+    Pixel* data = malloc(sizeof(Pixel)*pwidth*pheight*3); //allocate memory to hold all of the pixel data
     //write_p3(&data[0]);
     fclose(outputfp); //close the output file
     fclose(inputfp);  //close the input file
