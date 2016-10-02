@@ -219,7 +219,6 @@ int read_scene(char* filename, Object* objects){
                 c = next_c(json);
                 if (c == '}'){
                     // stop parsing this object
-                    i++;
                     break;
                 }
                 else if (c == ','){
@@ -264,8 +263,12 @@ int read_scene(char* filename, Object* objects){
             skip_ws(json);
             c = next_c(json);
 
+            printf("Offset: %d \n", i*sizeof(Object));
+
             *(objects+i*sizeof(Object)) = temp;
+            printf("Line: %d \n", line);
             printf("Kind: %d %d\n", temp.kind, objects[i*sizeof(Object)].kind);
+            i++;
 
 
             if (c == ','){
@@ -274,7 +277,6 @@ int read_scene(char* filename, Object* objects){
             }
             else if (c == ']'){
                 fclose(json);
-                //*(objects+i*sizeof(Object)) = NULL;
                 return i;
             }
             else{
@@ -371,16 +373,13 @@ int main(int argc, char* argv[]){
         exit(1); //if the file cannot be opened, exit the program
     }
 
-    Object** objects;
-    objects = malloc(sizeof(Object*)*128);
+    Object* objects = malloc(sizeof(Object*)*128*80);
 
     width = argv[1][0];
     height = argv[2][0];
-    int numOfObjects = read_scene(argv[3], &objects[0][0]);
+    int numOfObjects = read_scene(argv[3], &objects[0]);
     printf("Object #: %d\n", numOfObjects);
-    objects[numOfObjects] = NULL;
-
-    printf("Kind: %d\n", objects[0]->kind);
+    //objects[numOfObjects] = NULL;
 
     double cx = 0;
     double cy = 0;
@@ -406,19 +405,17 @@ int main(int argc, char* argv[]){
             normalize(Rd);
 
             double best_t = INFINITY;
-            for (i=0; objects[i] != 0; i += 1){
+            for (i=0; numOfObjects > i; i += 1){
                 double t = 0;
 
-                switch(objects[i]->kind){
+                switch(objects[i*sizeof(Object)].kind){
                     case 0:
-                        printf("Camera\n");
                         break;
                     case 1:
                         t = sphere_intersection(Ro, Rd,
-                                                objects[i]->sphere.center,
-                                                objects[i]->sphere.radius);
+                                                objects[i*sizeof(Object)].sphere.center,
+                                                objects[i*sizeof(Object)].sphere.radius);
                     case 2:
-                        printf("Plane\n");
                         break;
                     default:
                     // Horrible error
