@@ -243,6 +243,12 @@ int read_scene(char* filename, Object* objects){
                             fprintf(stderr, "Error: Non-camera/sphere object has attribute width or height or radius line number %d.\n", line);
                             exit(1);
                         }
+                        if(temp.kind == 0){
+                                printf("here!\n");
+                                temp.camera.center[0] = 0.0;
+                                temp.camera.center[1] = 0.0;
+                                temp.camera.center[2] = 0.0;
+                        }
                     }
                     else if ((strcmp(key, "color") == 0) ||
                              (strcmp(key, "position") == 0) ||
@@ -250,18 +256,31 @@ int read_scene(char* filename, Object* objects){
                         double* value = next_vector(json);
                         //memcpy(dest, src, sizeof (mytype) * rows * coloumns);
                         if(temp.kind == 1 && (strcmp(key, "color") == 0)){
-                                memcpy(temp.color, value, sizeof (value));
+                                temp.color[0] = value[0];
+                                temp.color[1] = value[1];
+                                temp.color[2] = value[2];
                         }else if(temp.kind == 1 && (strcmp(key, "position") == 0)){
                                 //printf("pos: %f %f %f\n", value[0], value[1], value[2]);
-                                memcpy(temp.sphere.center, value, sizeof (value));
+                                temp.sphere.center[0] = value[0];
+                                temp.sphere.center[1] = value[1];
+                                temp.sphere.center[2] = value[2];
                         }else if(temp.kind == 2 && (strcmp(key, "color") == 0)){
-                                memcpy(temp.color, value, sizeof (value));
+                                temp.color[0] = value[0];
+                                temp.color[1] = value[1];
+                                temp.color[2] = value[2];
                         }else if(temp.kind == 2 && (strcmp(key, "position") == 0)){
-                                memcpy(temp.plane.center, value, sizeof (value));
+                                temp.plane.center[0] = value[0];
+                                temp.plane.center[1] = value[1];
+                                temp.plane.center[2] = value[2];
                         }else if(temp.kind == 2 && (strcmp(key, "normal") == 0)){
-                                memcpy(temp.plane.normal, value, sizeof (value));
+                                temp.plane.normal[0] = value[0];
+                                temp.plane.normal[1] = value[1];
+                                temp.plane.normal[2] = value[2];
                         }else if (temp.kind == 0 && (strcmp(key, "position") == 0)){
-                            //camera position assumed to be zero
+                                temp.camera.center[0] = value[0];
+                                temp.camera.center[1] = value[1];
+                                temp.camera.center[2] = value[2];
+
                         }else{
                             if(temp.kind == 0){
                                     fprintf(stderr, "Error: Camera object has non-position attribute on line %d.\n", line);
@@ -274,7 +293,6 @@ int read_scene(char* filename, Object* objects){
                                     exit(1);
                             }
                         }
-
                     }
                     else{
                         fprintf(stderr, "Error: Unknown property, \"%s\", on line %d.\n",
@@ -291,11 +309,10 @@ int read_scene(char* filename, Object* objects){
             skip_ws(json);
             c = next_c(json);
 
-            printf("Offset: %d \n", i*sizeof(Object));
+            //printf("Offset: %d \n", i*sizeof(Object));
 
             *(objects+i*sizeof(Object)) = temp;
-            //printf("Line: %d \n", line);
-
+            printf("Kind: %d \n", objects[i*sizeof(Object)].kind);
             i++;
 
 
@@ -317,54 +334,6 @@ int read_scene(char* filename, Object* objects){
 
 double sphere_intersection(double* Ro, double* Rd,
 			     double* C, double r) {
-  /* Step 1. Find the equation for the object you are
-  // interested in..  (e.g., sphere)
-  //
-  // x^2 + y^2 + z^2 = r^2
-  //
-  // Step 2. Parameterize the equation with a center point
-  // if needed
-  //
-  // (x-Cx)^2 + (y-Cy)^2 + (z-Cz)^2 = r^2
-  //
-  // Step 3. Substitute the eq for a ray into our object
-  // equation.
-  //
-  // (Rox + t*Rdx - Cx)^2 + (Roy + t*Rdy - Cy)^2 + (Roz + t*Rdz - Cz)^2 - r^2 = 0
-  //
-  // Step 4. Solve for t.
-  //
-  // Step 4a. Rewrite the equation (flatten).
-  //
-  // -r^2 +
-  // t^2 * Rdx^2 +
-  // t^2 * Rdy^2 +
-  // t^2 * Rdz^2 +
-  //
-  // 2*t * Rox * Rdx -
-  // 2*t * Rdx * Cx +
-  // 2*t * Roy * Rdy -
-  // 2*t * Rdy * Cy +
-  // 2*t * Roz * Rdz -
-  // 2*t * Rdz * Cz +
-  //
-  // Rox^2 -
-  // 2*Rox*Cx +
-  // Cx^2 +
-  // Roy^2 -
-  // 2*Roy*Cy +
-  // Cy^2 +
-  // Roz^2 -
-  // 2*Roz*Cz +
-  // Cz^2 = 0
-  //
-  // Steb 4b. Rewrite the equation in terms of t.
-  //
-  // t^2 * (Rdx^2 + + Rdy^2 Rdz^2) +
-  // t * (2 * (Rox * Rdx - Rdx * Cx + Roy * Rdy - Rdy * Cy + Roz * Rdz - Rdz * Cz)) +
-  // Rox^2 - 2*Rox*Cx + Cx^2 + Roy^2 - 2*Roy*Cy + Cy^2 + Roz^2 - 2*Roz*Cz + Cz^2 - r^2 = 0
-  //
-  // Use the quadratic equation to solve for t..*/
   double a = (sqr(Rd[0]) + sqr(Rd[1]) + sqr(Rd[2]));
   double b = (2 * (Ro[0] * Rd[0] - Rd[0] * C[0] + Ro[1] * Rd[1] - Rd[1] * C[1] + Ro[2] * Rd[2] - Rd[2] * C[2]));
   double c = sqr(Ro[0]) - 2*Ro[0]*C[0] + sqr(C[0]) + sqr(Ro[1]) - 2*Ro[1]*C[1] + sqr(C[1]) + sqr(Ro[2]) - 2*Ro[2]*C[2] + sqr(C[2]) - sqr(r);
@@ -385,7 +354,7 @@ double sphere_intersection(double* Ro, double* Rd,
 
 int main(int argc, char* argv[]){
     if(argc != 5){
-        fprintf(stderr, "Error: Insufficient parameter amount.\nProper input: width height input_filename.json output_filename.ppm\n\n", 001);
+        fprintf(stderr, "Error: Insufficient parameter amount.\nProper input: width height input_filename.json output_filename.ppm\n\n");
         exit(1); //exit the program if there are insufficient arguments
     }
     //echo the command line arguments
@@ -397,7 +366,7 @@ int main(int argc, char* argv[]){
 
     outputfp = fopen(argv[4], "wb"); //open output to write to binary
     if (outputfp == 0){
-        fprintf(stderr, "Error: Output file \"%s\" could not be opened.\n", argv[3], 003);
+        fprintf(stderr, "Error: Output file \"%s\" could not be opened.\n", argv[3]);
         exit(1); //if the file cannot be opened, exit the program
     }
 
@@ -414,8 +383,8 @@ int main(int argc, char* argv[]){
 
     double cx = 0;
     double cy = 0;
-    double h = 0.5;
-    double w = 0.5;
+    double h = 0.25;
+    double w = 0.25;
 
     int M = pheight;
     int N = pwidth;
@@ -425,6 +394,20 @@ int main(int argc, char* argv[]){
 
     int y, x, i;
 
+    printf("Object 0: %d\n\tWidth:%f\n\tHeight: %f\n\tPos: %lf %lf %lf\n", objects[0].kind, objects[0].camera.width,
+                                                                           objects[0].camera.height, objects[0].camera.center[0],
+                                                                           objects[0].camera.center[1],  objects[0].camera.center[2]);
+    printf("Object 1: %d\n\tRadius:%f\n\tColor: %lf %lf %lf\n\tPos: %lf %lf %lf\n", objects[1*sizeof(Object)].kind, objects[1*sizeof(Object)].sphere.radius,
+                                                                       objects[1*sizeof(Object)].color[0], objects[1*sizeof(Object)].color[1],
+                                                                       objects[1*sizeof(Object)].color[2], objects[1*sizeof(Object)].sphere.center[0],
+                                                                       objects[1*sizeof(Object)].sphere.center[1],  objects[1*sizeof(Object)].sphere.center[2]);
+    printf("Object 2: %d\n\tColor: %lf %lf %lf\n\tPos: %lf %lf %lf\n\tNormal: %lf %lf %lf\n", objects[2*sizeof(Object)].kind,
+                                                                       objects[2*sizeof(Object)].color[0], objects[2*sizeof(Object)].color[1],
+                                                                       objects[2*sizeof(Object)].color[2], objects[2*sizeof(Object)].plane.center[0],
+                                                                       objects[2*sizeof(Object)].plane.center[1],  objects[2*sizeof(Object)].plane.center[2],
+                                                                       objects[2*sizeof(Object)].plane.normal[0], objects[2*sizeof(Object)].plane.normal[1],
+                                                                       objects[2*sizeof(Object)].plane.normal[2]);
+
     for (y = 0; y < M; y += 1){
         for (x = 0; x < N; x += 1){
             double Ro[3] = {0, 0, 0};
@@ -432,7 +415,8 @@ int main(int argc, char* argv[]){
             double Rd[3] ={
                 cx - (w/2) + pixwidth * (x + 0.5),
                 cy - (h/2) + pixheight * (y + 0.5),
-                1};
+                1
+            };
             normalize(Rd);
 
             double best_t = INFINITY;
@@ -440,16 +424,16 @@ int main(int argc, char* argv[]){
                 double t = 0;
 
                 switch(objects[i*sizeof(Object)].kind){
-                    case 0:
-                        break;
-                    case 1:
-                        t = sphere_intersection(Ro, Rd,
-                                                objects[i*sizeof(Object)].sphere.center,
-                                                objects[i*sizeof(Object)].sphere.radius);
-                        break;
-                    case 2:
-                        break;
-                    default:
+                case 0:
+                    break;
+                case 1:
+                    t = sphere_intersection(Ro, Rd,
+                                            objects[i*sizeof(Object)].sphere.center,
+                                            objects[i*sizeof(Object)].sphere.radius);
+                    break;
+                case 2:
+                    break;
+                default:
                     // Horrible error
                     exit(1);
                 }
