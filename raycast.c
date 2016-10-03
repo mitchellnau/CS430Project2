@@ -412,20 +412,6 @@ int main(int argc, char* argv[]){
     double pixwidth = w / N;
 
     int y, x;
-/*
-    printf("Object 0: %d\n\tWidth:%f\n\tHeight: %f\n\tPos: %lf %lf %lf\n", objects[0].kind, objects[0].camera.width,
-                                                                           objects[0].camera.height, objects[0].camera.center[0],
-                                                                           objects[0].camera.center[1],  objects[0].camera.center[2]);
-    printf("Object 1: %d\n\tRadius:%f\n\tColor: %lf %lf %lf\n\tPos: %lf %lf %lf\n", objects[1*sizeof(Object)].kind, objects[1*sizeof(Object)].sphere.radius,
-                                                                       objects[1*sizeof(Object)].color[0], objects[1*sizeof(Object)].color[1],
-                                                                       objects[1*sizeof(Object)].color[2], objects[1*sizeof(Object)].sphere.center[0],
-                                                                       objects[1*sizeof(Object)].sphere.center[1],  objects[1*sizeof(Object)].sphere.center[2]);
-    printf("Object 2: %d\n\tColor: %lf %lf %lf\n\tPos: %lf %lf %lf\n\tNormal: %lf %lf %lf\n", objects[2*sizeof(Object)].kind,
-                                                                       objects[2*sizeof(Object)].color[0], objects[2*sizeof(Object)].color[1],
-                                                                       objects[2*sizeof(Object)].color[2], objects[2*sizeof(Object)].plane.center[0],
-                                                                       objects[2*sizeof(Object)].plane.center[1],  objects[2*sizeof(Object)].plane.center[2],
-                                                                       objects[2*sizeof(Object)].plane.normal[0], objects[2*sizeof(Object)].plane.normal[1],
-                                                                       objects[2*sizeof(Object)].plane.normal[2]);*/
 
     for (y = 0; y < M; y += 1){
         for (x = 0; x < N; x += 1){
@@ -471,7 +457,7 @@ int main(int argc, char* argv[]){
                 temporary.r = (int)(objects[best_t_i*sizeof(Object)].color[0]*255);
                 temporary.g = (int)(objects[best_t_i*sizeof(Object)].color[1]*255);
                 temporary.b = (int)(objects[best_t_i*sizeof(Object)].color[2]*255);
-                *(data+(sizeof(Pixel)*pheight*pwidth)-y*pheight*sizeof(Pixel)+x*sizeof(Pixel)) = temporary;
+                *(data+(sizeof(Pixel)*pheight*pwidth)-(y+1)*pheight*sizeof(Pixel)+x*sizeof(Pixel)) = temporary;
             }
             else{
                 //printf(".");
@@ -479,7 +465,7 @@ int main(int argc, char* argv[]){
                 temporary.r = 0;
                 temporary.g = 0;
                 temporary.b = 0;
-                *(data+(sizeof(Pixel)*pheight*pwidth)-y*pheight*sizeof(Pixel)+x*sizeof(Pixel)) = temporary;
+                *(data+(sizeof(Pixel)*pheight*pwidth)-(y+1)*pheight*sizeof(Pixel)+x*sizeof(Pixel)) = temporary;
             }
 
         }
@@ -496,5 +482,4 @@ int main(int argc, char* argv[]){
 
 /*BUGS TO FIX:
 error checking
-small image breaking
-first line of output image being all black*/
+small image breaking*/
