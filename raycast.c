@@ -137,9 +137,10 @@ char* next_string(FILE* json){
 
 double next_number(FILE* json){
     double value;
-    fscanf(json, "%lf", &value);
-    // Error check this..
-    return value;
+    int f = fscanf(json, "%lf", &value);
+    if (f == 1) return value;
+    fprintf(stderr, "Error: Expected number on line %d.\n", line);
+    exit(1);
 }
 
 double* next_vector(FILE* json){
@@ -491,3 +492,9 @@ int main(int argc, char* argv[]){
     printf("closing...");
     return(0);
 }
+
+
+/*BUGS TO FIX:
+error checking
+small image breaking
+first line of output image being all black*/
