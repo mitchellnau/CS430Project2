@@ -351,6 +351,17 @@ double sphere_intersection(double* Ro, double* Rd,
   return -1;
 }
 
+double plane_intersection(double* Ro, double* Rd,
+                          double* C, double* N){
+  double t, d;
+  //t = -(AX0 + BY0 + CZ0 + D) / (AXd + BYd + CZd);
+  //D = distance from the origin to the plane
+  d = sqrt(sqr(C[0]-Ro[0])+sqr(C[1]-Ro[1])+sqr(C[2]-Ro[2]));
+  t = -(N[0]*Ro[0] + N[1]*Ro[1] + N[2]*Ro[2] + d) / (N[0]*Rd[0] + N[1]*Rd[1] + N[2]*Rd[2]);
+  //printf("Plane intersection: %d\n", t);
+  return t;
+}
+
 int main(int argc, char* argv[]){
     if(argc != 5){
         fprintf(stderr, "Error: Insufficient parameter amount.\nProper input: width height input_filename.json output_filename.ppm\n\n");
