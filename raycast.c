@@ -392,18 +392,25 @@ int main(int argc, char* argv[]){
 
     //printf("Object #: %f\n", objects[1*sizeof(Object)].sphere.center[2]);
 
-    double cx = 0;
-    double cy = 0;
-    double h = 0.25;
-    double w = 0.25;
-
+    double cx, cy, h, w;
+    int i;
+    for (i=0; i < numOfObjects; i += 1){
+        double t = 0;
+        if(objects[i*sizeof(Object)].kind == 0){
+            w = objects[i*sizeof(Object)].camera.width;
+            h = objects[i*sizeof(Object)].camera.height;
+            cx = objects[i*sizeof(Object)].camera.center[0];
+            cy = objects[i*sizeof(Object)].camera.center[1];
+            break;
+        }
+    }
     int M = pheight;
     int N = pwidth;
 
     double pixheight = h / M;
     double pixwidth = w / N;
 
-    int y, x, i;
+    int y, x;
 /*
     printf("Object 0: %d\n\tWidth:%f\n\tHeight: %f\n\tPos: %lf %lf %lf\n", objects[0].kind, objects[0].camera.width,
                                                                            objects[0].camera.height, objects[0].camera.center[0],
