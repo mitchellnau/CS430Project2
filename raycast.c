@@ -451,6 +451,9 @@ int main(int argc, char* argv[]){
                                             objects[i*sizeof(Object)].sphere.radius);
                     break;
                 case 2:
+                    t = plane_intersection(Ro, Rd,
+                                           objects[i*sizeof(Object)].plane.center,
+                                           objects[i*sizeof(Object)].plane.normal);
                     break;
                 default:
                     // Horrible error
@@ -464,10 +467,10 @@ int main(int argc, char* argv[]){
             if (best_t > 0 && best_t != INFINITY){
                 //printf("#");
                 Pixel temporary;
-                temporary.r = objects[best_t_i*sizeof(Object)].color[0]*255;
-                temporary.g = objects[best_t_i*sizeof(Object)].color[1]*255;
-                temporary.b = objects[best_t_i*sizeof(Object)].color[2]*255;
-                *(data+y*pheight*sizeof(Pixel)+x*sizeof(Pixel)) = temporary;
+                temporary.r = (int)(objects[best_t_i*sizeof(Object)].color[0]*255);
+                temporary.g = (int)(objects[best_t_i*sizeof(Object)].color[1]*255);
+                temporary.b = (int)(objects[best_t_i*sizeof(Object)].color[2]*255);
+                *(data+(sizeof(Pixel)*pheight*pwidth)-y*pheight*sizeof(Pixel)+x*sizeof(Pixel)) = temporary;
             }
             else{
                 //printf(".");
@@ -475,7 +478,7 @@ int main(int argc, char* argv[]){
                 temporary.r = 0;
                 temporary.g = 0;
                 temporary.b = 0;
-                *(data+y*pheight*sizeof(Pixel)+x*sizeof(Pixel)) = temporary;
+                *(data+(sizeof(Pixel)*pheight*pwidth)-y*pheight*sizeof(Pixel)+x*sizeof(Pixel)) = temporary;
             }
 
         }
