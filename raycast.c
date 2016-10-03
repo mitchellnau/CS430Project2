@@ -385,6 +385,14 @@ int main(int argc, char* argv[]){
 
     pwidth = atoi(argv[1]);
     pheight = atoi(argv[2]);
+    if(pwidth == 0){
+        fprintf(stderr, "Error: Input width '%d' cannot be zero.\n", pwidth);
+        exit(1);
+    }
+    if(pheight == 0){
+        fprintf(stderr, "Error: Input height '%d' cannot be zero.\n", pheight);
+        exit(1);
+    }
     int numOfObjects = read_scene(argv[3], &objects[0]);
     printf("Object #: %d\n", numOfObjects);
     //objects[numOfObjects] = NULL;
