@@ -291,6 +291,10 @@ int read_scene(char* filename, Object* objects)
                         else if(temp.kind == 1 && (strcmp(key, "radius") == 0))
                         {
                             temp.sphere.radius = value;
+                            if(value <= 0){
+                                    fprintf(stderr, "Error: Sphere radius cannot be less than or equal to 0 on line %d.\n", line);
+                                    exit(1);
+                            }
                         }
                         else
                         {
