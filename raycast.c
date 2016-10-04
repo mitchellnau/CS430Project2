@@ -309,10 +309,8 @@ int read_scene(char* filename, Object* objects){
             skip_ws(json);
             c = next_c(json);
 
-            //printf("Offset: %d \n", i*sizeof(Object));
-
             *(objects+i*sizeof(Object)) = temp;
-            printf("Kind: %d \n", objects[i*sizeof(Object)].kind);
+            //printf("Kind: %d \n", objects[i*sizeof(Object)].kind);
             i++;
 
 
@@ -394,7 +392,7 @@ int main(int argc, char* argv[]){
         exit(1);
     }
     int numOfObjects = read_scene(argv[3], &objects[0]);
-    printf("Object #: %d\n", numOfObjects);
+    printf("# of Objects: %d\n", numOfObjects);
     //objects[numOfObjects] = NULL;
     Pixel* data = malloc(sizeof(Pixel)*pwidth*pheight*3); //allocate memory to hold all of the pixel data
 
@@ -430,6 +428,7 @@ int main(int argc, char* argv[]){
     double pixwidth = w / N;
 
     int y, x;
+
 
     for (y = 0; y < M; y += 1){
         for (x = 0; x < N; x += 1){
@@ -471,19 +470,23 @@ int main(int argc, char* argv[]){
             }
             if (best_t > 0 && best_t != INFINITY){
                 //printf("#");
+                printf("here. x %d\ty %d\n", x, y);
                 Pixel temporary;
                 temporary.r = (int)(objects[best_t_i*sizeof(Object)].color[0]*255);
                 temporary.g = (int)(objects[best_t_i*sizeof(Object)].color[1]*255);
                 temporary.b = (int)(objects[best_t_i*sizeof(Object)].color[2]*255);
-                *(data+(sizeof(Pixel)*pheight*pwidth)-(y+1)*pheight*sizeof(Pixel)+x*sizeof(Pixel)) = temporary;
+                //*(data+(sizeof(Pixel)*pheight*pwidth)-(y+1)*pheight*sizeof(Pixel)+x*sizeof(Pixel)) = temporary;
+                *(data+(sizeof(Pixel)*pheight*pwidth)-(y+1)*pwidth*sizeof(Pixel)+x*sizeof(Pixel)) = temporary;
             }
             else{
                 //printf(".");
+                printf("here. x %3d\ty %3d\n", x, y);
                 Pixel temporary;
                 temporary.r = 0;
                 temporary.g = 0;
                 temporary.b = 0;
-                *(data+(sizeof(Pixel)*pheight*pwidth)-(y+1)*pheight*sizeof(Pixel)+x*sizeof(Pixel)) = temporary;
+                //*(data+(sizeof(Pixel)*pheight*pwidth)-(y+1)*pheight*sizeof(Pixel)+x*sizeof(Pixel)) = temporary;
+                *(data+(sizeof(Pixel)*pheight*pwidth)-(y+1)*pwidth*sizeof(Pixel)+x*sizeof(Pixel)) = temporary;
             }
 
         }
@@ -498,6 +501,5 @@ int main(int argc, char* argv[]){
 }
 
 
-/*BUGS TO FIX:
-error checking
-small image breaking*/
+/*TODO:
+error checking*/
