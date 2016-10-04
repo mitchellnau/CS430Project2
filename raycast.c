@@ -448,49 +448,7 @@ double plane_intersection(double* Ro, double* Rd,
     return t;
 }
 
-int main(int argc, char* argv[])
-{
-    if(argc != 5)
-    {
-        fprintf(stderr, "Error: Insufficient parameter amount.\nProper input: width height input_filename.json output_filename.ppm\n\n");
-        exit(1); //exit the program if there are insufficient arguments
-    }
-    //echo the command line arguments
-    printf("Arg 0: %s\n", argv[0]);
-    printf("Arg 1: %s\n", argv[1]);
-    printf("Arg 2: %s\n", argv[2]);
-    printf("Arg 3: %s\n", argv[3]);
-    printf("Arg 4: %s\n", argv[4]);
-
-    outputfp = fopen(argv[4], "wb"); //open output to write to binary
-    if (outputfp == 0)
-    {
-        fprintf(stderr, "Error: Output file \"%s\" could not be opened.\n", argv[3]);
-        exit(1); //if the file cannot be opened, exit the program
-    }
-
-    Object* objects = malloc(sizeof(Object*)*128*80);
-
-    pwidth = atoi(argv[1]);
-    pheight = atoi(argv[2]);
-    if(pwidth == 0)
-    {
-        fprintf(stderr, "Error: Input width '%d' cannot be zero.\n", pwidth);
-        exit(1);
-    }
-    if(pheight == 0)
-    {
-        fprintf(stderr, "Error: Input height '%d' cannot be zero.\n", pheight);
-        exit(1);
-    }
-    int numOfObjects = read_scene(argv[3], &objects[0]);
-    printf("# of Objects: %d\n", numOfObjects);
-    //objects[numOfObjects] = NULL;
-    Pixel* data = malloc(sizeof(Pixel)*pwidth*pheight*3); //allocate memory to hold all of the pixel data
-
-
-    //printf("Object #: %f\n", objects[1*sizeof(Object)].sphere.center[2]);
-
+void store_pixels(int numOfObjects, Object* objects, Pixel* data){
     double cx, cy, h, w;
     cx = 0;
     cy = 0;
@@ -590,6 +548,51 @@ int main(int argc, char* argv[])
 
         }
     }
+}
+
+
+int main(int argc, char* argv[])
+{
+    if(argc != 5)
+    {
+        fprintf(stderr, "Error: Insufficient parameter amount.\nProper input: width height input_filename.json output_filename.ppm\n\n");
+        exit(1); //exit the program if there are insufficient arguments
+    }
+    //echo the command line arguments
+    printf("Arg 0: %s\n", argv[0]);
+    printf("Arg 1: %s\n", argv[1]);
+    printf("Arg 2: %s\n", argv[2]);
+    printf("Arg 3: %s\n", argv[3]);
+    printf("Arg 4: %s\n", argv[4]);
+
+    outputfp = fopen(argv[4], "wb"); //open output to write to binary
+    if (outputfp == 0)
+    {
+        fprintf(stderr, "Error: Output file \"%s\" could not be opened.\n", argv[3]);
+        exit(1); //if the file cannot be opened, exit the program
+    }
+
+
+    pwidth = atoi(argv[1]);
+    pheight = atoi(argv[2]);
+    if(pwidth == 0)
+    {
+        fprintf(stderr, "Error: Input width '%d' cannot be zero.\n", pwidth);
+        exit(1);
+    }
+    if(pheight == 0)
+    {
+        fprintf(stderr, "Error: Input height '%d' cannot be zero.\n", pheight);
+        exit(1);
+    }
+    int numOfObjects = read_scene(argv[3], &objects[0]);
+    printf("# of Objects: %d\n", numOfObjects);
+    //objects[numOfObjects] = NULL;
+    Pixel* data = malloc(sizeof(Pixel)*pwidth*pheight*3); //allocate memory to hold all of the pixel data
+
+
+    //printf("Object #: %f\n", objects[1*sizeof(Object)].sphere.center[2]);
+    store_pixels(numOfObjects, &objects[0], &data[0]);
     maxcv = 255;
     printf("writing to image file...\n");
     write_p3(&data[0]);
@@ -603,5 +606,4 @@ int main(int argc, char* argv[])
 /*TODO:
 error checking
     color value between 0 and 1
-    plane stuff
-    radius is positive*/
+    plane stuff*/
