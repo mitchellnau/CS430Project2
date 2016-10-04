@@ -572,6 +572,7 @@ int main(int argc, char* argv[])
         exit(1); //if the file cannot be opened, exit the program
     }
 
+    Object* objects = malloc(sizeof(Object)*128);
 
     pwidth = atoi(argv[1]);
     pheight = atoi(argv[2]);
