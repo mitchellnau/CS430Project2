@@ -8,24 +8,30 @@
 #include <ctype.h>
 
 //data type to store pixel rgb values
-typedef struct Pixel{
+typedef struct Pixel
+{
     unsigned char r, g, b;
 } Pixel;
 
-typedef struct{
+typedef struct
+{
     int kind; // 0 = camera, 1 = sphere, 2 = plane
     double color[3];
-    union{
-        struct{
+    union
+    {
+        struct
+        {
             double center[3];
             double width;
             double height;
         } camera;
-        struct{
+        struct
+        {
             double center[3];
             double radius;
         } sphere;
-        struct{
+        struct
+        {
             double center[3];
             double normal[3];
         } plane;
@@ -38,12 +44,14 @@ int pwidth, pheight, maxcv; //global variables to store header information
 int line = 1;
 
 //This function writes data from the pixel buffer passed into the function to the output file in ascii.
-int write_p3(Pixel* image){
+int write_p3(Pixel* image)
+{
     fprintf(outputfp, "%c%c\n", 'P', '3'); //write out the file header P type
     fprintf(outputfp, "%d %d\n", pwidth, pheight); //write the width and the height
     fprintf(outputfp, "%d\n", maxcv); //write the max color value
     int i;
-    for(i = 0; i < pwidth*pheight; i++){  //write each pixel in the image to the output file
+    for(i = 0; i < pwidth*pheight; i++)   //write each pixel in the image to the output file
+    {
         fprintf(outputfp, "%d\n%d\n%d\n", image[i*sizeof(Pixel)].r, //in ascii
                 image[i*sizeof(Pixel)].g,
                 image[i*sizeof(Pixel)].b);
@@ -51,28 +59,35 @@ int write_p3(Pixel* image){
     return 1;
 }
 
-static inline double sqr(double v) {
-  return v*v;
+//This function returns the input value square
+static inline double sqr(double v)
+{
+    return v*v;
 }
 
-static inline void normalize(double* v) {
-  double len = sqrt(sqr(v[0]) + sqr(v[1]) + sqr(v[2]));
-  v[0] /= len;
-  v[1] /= len;
-  v[2] /= len;
+//this function normalizes the input vector
+static inline void normalize(double* v)
+{
+    double len = sqrt(sqr(v[0]) + sqr(v[1]) + sqr(v[2]));
+    v[0] /= len;
+    v[1] /= len;
+    v[2] /= len;
 }
 
 // next_c() wraps the getc() function and provides error checking and line
 // number maintenance
-int next_c(FILE* json){
+int next_c(FILE* json)
+{
     int c = fgetc(json);
 #ifdef DEBUG
     printf("next_c: '%c'\n", c);
 #endif
-    if (c == '\n'){
+    if (c == '\n')
+    {
         line += 1;
     }
-    if (c == EOF){
+    if (c == EOF)
+    {
         fprintf(stderr, "Error: Unexpected end of file on line number %d.\n", line);
         exit(1);
     }
@@ -82,7 +97,8 @@ int next_c(FILE* json){
 
 // expect_c() checks that the next character is d.  If it is not it emits
 // an error.
-void expect_c(FILE* json, int d){
+void expect_c(FILE* json, int d)
+{
     int c = next_c(json);
     if (c == d) return;
     fprintf(stderr, "Error: Expected '%c' on line %d.\n", d, line);
@@ -91,7 +107,8 @@ void expect_c(FILE* json, int d){
 
 
 // skip_ws() skips white space in the file.
-void skip_ws(FILE* json){
+void skip_ws(FILE* json)
+{
     int c = next_c(json);
     while (isspace(c))
     {
@@ -103,25 +120,31 @@ void skip_ws(FILE* json){
 
 // next_string() gets the next string from the file handle and emits an error
 // if a string can not be obtained.
-char* next_string(FILE* json){
+char* next_string(FILE* json)
+{
     char buffer[129];
     int c = next_c(json);
-    if (c != '"'){
+    if (c != '"')
+    {
         fprintf(stderr, "Error: Expected string on line %d.\n", line);
         exit(1);
     }
     c = next_c(json);
     int i = 0;
-    while (c != '"'){
-        if (i >= 128){
+    while (c != '"')
+    {
+        if (i >= 128)
+        {
             fprintf(stderr, "Error: Strings longer than 128 characters in length are not supported.\n");
             exit(1);
         }
-        if (c == '\\'){
+        if (c == '\\')
+        {
             fprintf(stderr, "Error: Strings with escape codes are not supported.\n");
             exit(1);
         }
-        if (c < 32 || c > 126){
+        if (c < 32 || c > 126)
+        {
             fprintf(stderr, "Error: Strings may contain only ascii characters.\n");
             exit(1);
         }
@@ -135,7 +158,10 @@ char* next_string(FILE* json){
     return returnString;
 }
 
-double next_number(FILE* json){
+//This function reads the next number in the input json file and returns that number
+//if it was indeed a number.  If a number was not found, it exits the program with an error.
+double next_number(FILE* json)
+{
     double value;
     int f = fscanf(json, "%lf", &value);
     if (f == 1) return value;
@@ -143,7 +169,10 @@ double next_number(FILE* json){
     exit(1);
 }
 
-double* next_vector(FILE* json){
+//this function reads a three dimensional vector from the input json file.
+//Its error handling is inside the expect_c and next_number functions.
+double* next_vector(FILE* json)
+{
     double* v = malloc(3*sizeof(double));
     expect_c(json, '[');
     skip_ws(json);
@@ -161,12 +190,17 @@ double* next_vector(FILE* json){
     return v;
 }
 
-
-int read_scene(char* filename, Object* objects){
+//this function takes in a json file and memory to store objects from the file.
+//After successfully parsing the json file, it will have stored all objects in
+//the json file into the memory passed into the function and will return the
+//number of objects it found.
+int read_scene(char* filename, Object* objects)
+{
     int c;
     FILE* json = fopen(filename, "r");
 
-    if (json == NULL){
+    if (json == NULL)
+    {
         fprintf(stderr, "Error: Could not open file \"%s\"\n", filename);
         exit(1);
     }
@@ -177,20 +211,24 @@ int read_scene(char* filename, Object* objects){
     skip_ws(json);
     // Find the objects
     int i = 0;
-    while (1){
+    while (1)
+    {
         c = fgetc(json);
-        if (c == ']'){
+        if (c == ']')
+        {
             fprintf(stderr, "Error: This is the worst scene file EVER.\n");
             fclose(json);
             return -1;
         }
-        if (c == '{'){
+        if (c == '{')
+        {
             skip_ws(json);
             Object temp;
 
             // Parse the object
             char* key = next_string(json);
-            if (strcmp(key, "type") != 0){
+            if (strcmp(key, "type") != 0)
+            {
                 fprintf(stderr, "Error: Expected \"type\" key on line number %d.\n", line);
                 exit(1);
             }
@@ -200,30 +238,37 @@ int read_scene(char* filename, Object* objects){
             skip_ws(json);
             char* value = next_string(json);
 
-            if (strcmp(value, "camera") == 0){
-                    temp.kind = 0;
+            if (strcmp(value, "camera") == 0)
+            {
+                temp.kind = 0;
             }
-            else if (strcmp(value, "sphere") == 0){
-                    temp.kind = 1;
+            else if (strcmp(value, "sphere") == 0)
+            {
+                temp.kind = 1;
             }
-            else if (strcmp(value, "plane") == 0){
-                    temp.kind = 2;
+            else if (strcmp(value, "plane") == 0)
+            {
+                temp.kind = 2;
             }
-            else{
+            else
+            {
                 fprintf(stderr, "Error: Unknown type, \"%s\", on line number %d.\n", value, line);
                 exit(1);
             }
 
             skip_ws(json);
 
-            while (1){
+            while (1)
+            {
                 // , }
                 c = next_c(json);
-                if (c == '}'){
+                if (c == '}')
+                {
                     // stop parsing this object
                     break;
                 }
-                else if (c == ','){
+                else if (c == ',')
+                {
                     // read another field
                     skip_ws(json);
                     char* key = next_string(json);
@@ -232,76 +277,106 @@ int read_scene(char* filename, Object* objects){
                     skip_ws(json);
                     if ((strcmp(key, "width") == 0) ||
                             (strcmp(key, "height") == 0) ||
-                            (strcmp(key, "radius") == 0)){
+                            (strcmp(key, "radius") == 0))
+                    {
                         double value = next_number(json);
-                        if(temp.kind == 0 && (strcmp(key, "width") == 0)){
-                                temp.camera.width = value;
-                        }else if(temp.kind == 0 && (strcmp(key, "height") == 0)){
-                                temp.camera.height = value;
-                        }else if(temp.kind == 1 && (strcmp(key, "radius") == 0)){
-                                temp.sphere.radius = value;
-                        }else{
+                        if(temp.kind == 0 && (strcmp(key, "width") == 0))
+                        {
+                            temp.camera.width = value;
+                        }
+                        else if(temp.kind == 0 && (strcmp(key, "height") == 0))
+                        {
+                            temp.camera.height = value;
+                        }
+                        else if(temp.kind == 1 && (strcmp(key, "radius") == 0))
+                        {
+                            temp.sphere.radius = value;
+                        }
+                        else
+                        {
                             fprintf(stderr, "Error: Non-camera/sphere object has attribute width or height or radius line number %d.\n", line);
                             exit(1);
                         }
-                        if(temp.kind == 0){ //camera assumed to be at 0,0,0
-                                temp.camera.center[0] = 0.0;
-                                temp.camera.center[1] = 0.0;
-                                temp.camera.center[2] = 0.0;
+                        if(temp.kind == 0)  //camera assumed to be at 0,0,0
+                        {
+                            temp.camera.center[0] = 0.0;
+                            temp.camera.center[1] = 0.0;
+                            temp.camera.center[2] = 0.0;
                         }
                     }
                     else if ((strcmp(key, "color") == 0) ||
                              (strcmp(key, "position") == 0) ||
-                             (strcmp(key, "normal") == 0)){
+                             (strcmp(key, "normal") == 0))
+                    {
                         double* value = next_vector(json);
                         //memcpy(dest, src, sizeof (mytype) * rows * coloumns);
-                        if(temp.kind == 1 && (strcmp(key, "color") == 0)){
-                                temp.color[0] = value[0];
-                                temp.color[1] = value[1];
-                                temp.color[2] = value[2];
-                        }else if(temp.kind == 1 && (strcmp(key, "position") == 0)){
-                                //printf("pos: %f %f %f\n", value[0], value[1], value[2]);
-                                temp.sphere.center[0] = value[0];
-                                temp.sphere.center[1] = value[1];
-                                temp.sphere.center[2] = value[2];
-                        }else if(temp.kind == 2 && (strcmp(key, "color") == 0)){
-                                temp.color[0] = value[0];
-                                temp.color[1] = value[1];
-                                temp.color[2] = value[2];
-                        }else if(temp.kind == 2 && (strcmp(key, "position") == 0)){
-                                temp.plane.center[0] = value[0];
-                                temp.plane.center[1] = value[1];
-                                temp.plane.center[2] = value[2];
-                        }else if(temp.kind == 2 && (strcmp(key, "normal") == 0)){
-                                temp.plane.normal[0] = value[0];
-                                temp.plane.normal[1] = value[1];
-                                temp.plane.normal[2] = value[2];
-                        }else if (temp.kind == 0 && (strcmp(key, "position") == 0)){
-                                temp.camera.center[0] = value[0];
-                                temp.camera.center[1] = value[1];
-                                temp.camera.center[2] = value[2];
+                        if(temp.kind == 1 && (strcmp(key, "color") == 0))
+                        {
+                            temp.color[0] = value[0];
+                            temp.color[1] = value[1];
+                            temp.color[2] = value[2];
+                        }
+                        else if(temp.kind == 1 && (strcmp(key, "position") == 0))
+                        {
+                            //printf("pos: %f %f %f\n", value[0], value[1], value[2]);
+                            temp.sphere.center[0] = value[0];
+                            temp.sphere.center[1] = value[1];
+                            temp.sphere.center[2] = value[2];
+                        }
+                        else if(temp.kind == 2 && (strcmp(key, "color") == 0))
+                        {
+                            temp.color[0] = value[0];
+                            temp.color[1] = value[1];
+                            temp.color[2] = value[2];
+                        }
+                        else if(temp.kind == 2 && (strcmp(key, "position") == 0))
+                        {
+                            temp.plane.center[0] = value[0];
+                            temp.plane.center[1] = value[1];
+                            temp.plane.center[2] = value[2];
+                        }
+                        else if(temp.kind == 2 && (strcmp(key, "normal") == 0))
+                        {
+                            temp.plane.normal[0] = value[0];
+                            temp.plane.normal[1] = value[1];
+                            temp.plane.normal[2] = value[2];
+                        }
+                        else if (temp.kind == 0 && (strcmp(key, "position") == 0))
+                        {
+                            temp.camera.center[0] = value[0];
+                            temp.camera.center[1] = value[1];
+                            temp.camera.center[2] = value[2];
 
-                        }else{
-                            if(temp.kind == 0){
-                                    fprintf(stderr, "Error: Camera object has non-position attribute on line %d.\n", line);
-                                    exit(1);
-                            }else if(temp.kind == 1){
-                                    fprintf(stderr, "Error: Sphere object has non-color/position attribute on line %d.\n", line);
-                                    exit(1);
-                            }else{
-                                    fprintf(stderr, "Error: Plane object has non-position/color/normal attribute on line %d.\n", line);
-                                    exit(1);
+                        }
+                        else
+                        {
+                            if(temp.kind == 0)
+                            {
+                                fprintf(stderr, "Error: Camera object has non-position attribute on line %d.\n", line);
+                                exit(1);
+                            }
+                            else if(temp.kind == 1)
+                            {
+                                fprintf(stderr, "Error: Sphere object has non-color/position attribute on line %d.\n", line);
+                                exit(1);
+                            }
+                            else
+                            {
+                                fprintf(stderr, "Error: Plane object has non-position/color/normal attribute on line %d.\n", line);
+                                exit(1);
                             }
                         }
                     }
-                    else{
+                    else
+                    {
                         fprintf(stderr, "Error: Unknown property, \"%s\", on line %d.\n",
                                 key, line);
                         //char* value = next_string(json);
                     }
                     skip_ws(json);
                 }
-                else{
+                else
+                {
                     fprintf(stderr, "Error: Unexpected value on line %d\n", line);
                     exit(1);
                 }
@@ -313,16 +388,18 @@ int read_scene(char* filename, Object* objects){
             //printf("Kind: %d \n", objects[i*sizeof(Object)].kind);
             i++;
 
-
-            if (c == ','){
+            if (c == ',')
+            {
                 // noop
                 skip_ws(json);
             }
-            else if (c == ']'){
+            else if (c == ']')
+            {
                 fclose(json);
                 return i;
             }
-            else{
+            else
+            {
                 fprintf(stderr, "Error: Expecting ',' or ']' on line %d.\n", line);
                 exit(1);
             }
@@ -330,39 +407,47 @@ int read_scene(char* filename, Object* objects){
     }
 }
 
+//this function calculates the t-value that the input ray intersects with an object
+//based on the sphere's center position and radius that are each passed into the function.
 double sphere_intersection(double* Ro, double* Rd,
-			     double* C, double r) {
-  double a = (sqr(Rd[0]) + sqr(Rd[1]) + sqr(Rd[2]));
-  double b = (2 * (Ro[0] * Rd[0] - Rd[0] * C[0] + Ro[1] * Rd[1] - Rd[1] * C[1] + Ro[2] * Rd[2] - Rd[2] * C[2]));
-  double c = sqr(Ro[0]) - 2*Ro[0]*C[0] + sqr(C[0]) + sqr(Ro[1]) - 2*Ro[1]*C[1] + sqr(C[1]) + sqr(Ro[2]) - 2*Ro[2]*C[2] + sqr(C[2]) - sqr(r);
+                           double* C, double r)
+{
+    double a = (sqr(Rd[0]) + sqr(Rd[1]) + sqr(Rd[2]));
+    double b = (2 * (Ro[0] * Rd[0] - Rd[0] * C[0] + Ro[1] * Rd[1] - Rd[1] * C[1] + Ro[2] * Rd[2] - Rd[2] * C[2]));
+    double c = sqr(Ro[0]) - 2*Ro[0]*C[0] + sqr(C[0]) + sqr(Ro[1]) - 2*Ro[1]*C[1] + sqr(C[1]) + sqr(Ro[2]) - 2*Ro[2]*C[2] + sqr(C[2]) - sqr(r);
 
-  double det = sqr(b) - 4 * a * c;
-  if (det < 0) return -1;
+    double det = sqr(b) - 4 * a * c;
+    if (det < 0) return -1;
 
-  det = sqrt(det);
+    det = sqrt(det);
 
-  double t0 = (-b - det) / (2*a);
-  if (t0 > 0) return t0;
+    double t0 = (-b - det) / (2*a);
+    if (t0 > 0) return t0;
 
-  double t1 = (-b + det) / (2*a);
-  if (t1 > 0) return t1;
+    double t1 = (-b + det) / (2*a);
+    if (t1 > 0) return t1;
 
-  return -1;
+    return -1;
 }
 
+//this function calculates the t-value of the intersection of an input ray with a plane.
+//based on the plane's center and normal values.
 double plane_intersection(double* Ro, double* Rd,
-                          double* C, double* N){
-  double t, d;
-  //t = -(AX0 + BY0 + CZ0 + D) / (AXd + BYd + CZd);
-  //D = distance from the origin to the plane
-  d = sqrt(sqr(C[0]-Ro[0])+sqr(C[1]-Ro[1])+sqr(C[2]-Ro[2]));
-  t = -(N[0]*Ro[0] + N[1]*Ro[1] + N[2]*Ro[2] + d) / (N[0]*Rd[0] + N[1]*Rd[1] + N[2]*Rd[2]);
-  //printf("Plane intersection: %d\n", t);
-  return t;
+                          double* C, double* N)
+{
+    double t, d;
+    //t = -(AX0 + BY0 + CZ0 + D) / (AXd + BYd + CZd);
+    //D = distance from the origin to the plane
+    d = sqrt(sqr(C[0]-Ro[0])+sqr(C[1]-Ro[1])+sqr(C[2]-Ro[2]));
+    t = -(N[0]*Ro[0] + N[1]*Ro[1] + N[2]*Ro[2] + d) / (N[0]*Rd[0] + N[1]*Rd[1] + N[2]*Rd[2]);
+    //printf("Plane intersection: %d\n", t);
+    return t;
 }
 
-int main(int argc, char* argv[]){
-    if(argc != 5){
+int main(int argc, char* argv[])
+{
+    if(argc != 5)
+    {
         fprintf(stderr, "Error: Insufficient parameter amount.\nProper input: width height input_filename.json output_filename.ppm\n\n");
         exit(1); //exit the program if there are insufficient arguments
     }
@@ -374,7 +459,8 @@ int main(int argc, char* argv[]){
     printf("Arg 4: %s\n", argv[4]);
 
     outputfp = fopen(argv[4], "wb"); //open output to write to binary
-    if (outputfp == 0){
+    if (outputfp == 0)
+    {
         fprintf(stderr, "Error: Output file \"%s\" could not be opened.\n", argv[3]);
         exit(1); //if the file cannot be opened, exit the program
     }
@@ -383,11 +469,13 @@ int main(int argc, char* argv[]){
 
     pwidth = atoi(argv[1]);
     pheight = atoi(argv[2]);
-    if(pwidth == 0){
+    if(pwidth == 0)
+    {
         fprintf(stderr, "Error: Input width '%d' cannot be zero.\n", pwidth);
         exit(1);
     }
-    if(pheight == 0){
+    if(pheight == 0)
+    {
         fprintf(stderr, "Error: Input height '%d' cannot be zero.\n", pheight);
         exit(1);
     }
@@ -406,9 +494,11 @@ int main(int argc, char* argv[]){
     w = 1;
     int i;
     int found = 0;
-    for (i=0; i < numOfObjects; i += 1){
+    for (i=0; i < numOfObjects; i += 1)
+    {
         double t = 0;
-        if(objects[i*sizeof(Object)].kind == 0){
+        if(objects[i*sizeof(Object)].kind == 0)
+        {
             w = objects[i*sizeof(Object)].camera.width;
             h = objects[i*sizeof(Object)].camera.height;
             cx = objects[i*sizeof(Object)].camera.center[0];
@@ -417,7 +507,8 @@ int main(int argc, char* argv[]){
             break;
         }
     }
-    if(found != 1){
+    if(found != 1)
+    {
         fprintf(stderr, "Error: A camera object was not found in the input json file.\n\tUsing default camera position: (%f,%f)\n\tUsing default camera width: %f\n\tUsing default camera height: %f\n", cx, cy, w, h);
     }
 
@@ -429,12 +520,15 @@ int main(int argc, char* argv[]){
 
     int y, x;
 
-
-    for (y = 0; y < M; y += 1){
-        for (x = 0; x < N; x += 1){
+    printf("calculating intersections and storing intersection pixels...\n");
+    for (y = 0; y < M; y += 1)
+    {
+        for (x = 0; x < N; x += 1)
+        {
             double Ro[3] = {0, 0, 0};
             // Rd = normalize(P - Ro)
-            double Rd[3] ={
+            double Rd[3] =
+            {
                 cx - (w/2) + pixwidth * (x + 0.5),
                 cy - (h/2) + pixheight * (y + 0.5),
                 1
@@ -443,10 +537,12 @@ int main(int argc, char* argv[]){
 
             double best_t = INFINITY;
             int best_t_i;
-            for (i=0; i < numOfObjects; i += 1){
+            for (i=0; i < numOfObjects; i += 1)
+            {
                 double t = 0;
 
-                switch(objects[i*sizeof(Object)].kind){
+                switch(objects[i*sizeof(Object)].kind)
+                {
                 case 0:
                     break;
                 case 1:
@@ -463,36 +559,35 @@ int main(int argc, char* argv[]){
                     // Horrible error
                     exit(1);
                 }
-                if (t > 0 && t < best_t){
-                        best_t = t;
-                        best_t_i = i;
+                if (t > 0 && t < best_t)
+                {
+                    best_t = t;
+                    best_t_i = i;
                 }
             }
-            if (best_t > 0 && best_t != INFINITY){
-                //printf("#");
-                printf("here. x %d\ty %d\n", x, y);
+            if (best_t > 0 && best_t != INFINITY)
+            {
+                //printf("here. x %d\ty %d\n", x, y);
                 Pixel temporary;
                 temporary.r = (int)(objects[best_t_i*sizeof(Object)].color[0]*255);
                 temporary.g = (int)(objects[best_t_i*sizeof(Object)].color[1]*255);
                 temporary.b = (int)(objects[best_t_i*sizeof(Object)].color[2]*255);
-                //*(data+(sizeof(Pixel)*pheight*pwidth)-(y+1)*pheight*sizeof(Pixel)+x*sizeof(Pixel)) = temporary;
                 *(data+(sizeof(Pixel)*pheight*pwidth)-(y+1)*pwidth*sizeof(Pixel)+x*sizeof(Pixel)) = temporary;
             }
-            else{
-                //printf(".");
-                printf("here. x %3d\ty %3d\n", x, y);
+            else
+            {
+                //printf("here. x %3d\ty %3d\n", x, y);
                 Pixel temporary;
                 temporary.r = 0;
                 temporary.g = 0;
                 temporary.b = 0;
-                //*(data+(sizeof(Pixel)*pheight*pwidth)-(y+1)*pheight*sizeof(Pixel)+x*sizeof(Pixel)) = temporary;
                 *(data+(sizeof(Pixel)*pheight*pwidth)-(y+1)*pwidth*sizeof(Pixel)+x*sizeof(Pixel)) = temporary;
             }
 
         }
-        //printf("\n");
     }
     maxcv = 255;
+    printf("writing to image file...\n");
     write_p3(&data[0]);
     fclose(outputfp); //close the output file
     fclose(inputfp);  //close the input file
@@ -502,4 +597,7 @@ int main(int argc, char* argv[]){
 
 
 /*TODO:
-error checking*/
+error checking
+    color value between 0 and 1
+    plane stuff
+    radius is positive*/
