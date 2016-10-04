@@ -313,6 +313,14 @@ int read_scene(char* filename, Object* objects)
                              (strcmp(key, "normal") == 0))
                     {
                         double* value = next_vector(json);
+                        if(strcmp(key, "color") == 0){
+                            if(value[0] > 1 || value[0] < 0 ||
+                               value[1] > 1 || value[1] < 0 ||
+                               value[2] > 1 || value[2] < 0 ){
+                                   fprintf(stderr, "Error: Color value is not 0.0-1.0 on line number %d.\n", line);
+                                   exit(1);
+                               }
+                        }
                         //memcpy(dest, src, sizeof (mytype) * rows * coloumns);
                         if(temp.kind == 1 && (strcmp(key, "color") == 0))
                         {
