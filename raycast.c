@@ -211,6 +211,8 @@ int read_scene(char* filename, Object* objects)
     expect_c(json, '[');
     skip_ws(json);
     // Find the objects
+    expect_c(json, '{');
+    ungetc('{', json);
     int i = 0;
     while (1)
     {
