@@ -34,10 +34,10 @@ If you would like to verify the raycasting...
 
 	2.  Open the output file using a program that can read .ppm P3 files.
 	    A correctly written output file will appear as follows:
-		> A small purple circle that is centered horizontally, cut off at the top, and located at the top of the image.
+		> A small purple circle that is centered horizontally located at the top of the image.
 		> A red circle that is centered and cut in half.
 		> A green circle that is to the right, cut in half, and partially blocks the red circle.
 		> A blue plane covering the bottom half of the image and bisects the green and red circles.
 
-Invalid inputs and file contents will close the program. 
+Invalid inputs and file contents will close the program. Invalid inputs can be checked using bad1.json through bad5.json files.
 This program is designed to use eight bits per color channel.
